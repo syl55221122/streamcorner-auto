@@ -64,6 +64,15 @@ def main():
                         "Chrome/131.0.0.0 Safari/537.36"),
         )
 
+        # 诊断: 记录所有请求
+        all_reqs = []
+        def on_all_req(req):
+            u = req.url
+            if any(x in u for x in ("workers.dev", "/corner", "api", "schedule", "channel")):
+                all_reqs.append(f"{req.method} {u[:150]}")
+                print(f"[req] {req.method} {u[:150]}")
+        page.on("request", on_all_req)
+
         # 拦截发往 Worker 的请求体 (直调用)
         def on_request(req):
             try:
@@ -105,6 +114,7 @@ def main():
                 print(f"[{prov}] load failed: {e}", file=sys.stderr)
 
         # 把拦截到的 POST 请求体也记下来 (用于后续直调优化)
+        print(f"[diag] interesting requests: {len(all_reqs)}")
         browser.close()
 
     # 从 API 数据组装条目
