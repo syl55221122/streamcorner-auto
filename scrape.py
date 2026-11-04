@@ -146,14 +146,11 @@ def main():
 
     data_dir = os.path.join(OUT_DIR, "data")
     os.makedirs(data_dir, exist_ok=True)
-    with open(os.path.join(data_dir, "debug_requests.json"), "w", encoding="utf-8") as f:
-        json.dump(_diag_reqs, f, ensure_ascii=False, indent=1)
-    with open(os.path.join(data_dir, "debug_console.json"), "w", encoding="utf-8") as f:
-        json.dump(_diag_console, f, ensure_ascii=False, indent=1)
-    with open(os.path.join(data_dir, "debug_html.txt"), "w", encoding="utf-8") as f:
-        f.write(_diag_html)
     with open(os.path.join(data_dir, "payload.json"), "w", encoding="utf-8") as f:
-        json.dump(captured_payloads, f, ensure_ascii=False, indent=1)
+        json.dump({"payloads": captured_payloads,
+                   "_debug_requests": _diag_reqs,
+                   "_debug_console": _diag_console,
+                   "_debug_html": _diag_html[:20000]}, f, ensure_ascii=False, indent=1)
     ts = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M")
     with open(os.path.join(data_dir, "items.json"), "w", encoding="utf-8") as f:
         json.dump({"updated": ts, "count": len(items), "items": items},
