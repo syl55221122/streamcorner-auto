@@ -72,6 +72,9 @@ def main():
                 all_reqs.append(f"{req.method} {u[:150]}")
                 print(f"[req] {req.method} {u[:150]}")
         page.on("request", on_all_req)
+        console_msgs = []
+        page.on("console", lambda m: console_msgs.append(f"{m.type}: {m.text[:200]}"))
+        page.on("pageerror", lambda e: console_msgs.append(f"PAGEERROR: {str(e)[:200]}"))
 
         # 拦截发往 Worker 的请求体 (直调用)
         def on_request(req):
@@ -115,6 +118,12 @@ def main():
 
         # 把拦截到的 POST 请求体也记下来 (用于后续直调优化)
         print(f"[diag] interesting requests: {len(all_reqs)}")
+        _diag_reqs = list(all_reqs)
+        _diag_console = list(console_msgs)
+        try:
+            _diag_html = page.content()[:50000]
+        except Exception:
+            _diag_html = ""
         browser.close()
 
     # 从 API 数据组装条目
@@ -137,6 +146,12 @@ def main():
 
     data_dir = os.path.join(OUT_DIR, "data")
     os.makedirs(data_dir, exist_ok=True)
+    with open(os.path.join(data_dir, "debug_requests.json"), "w", encoding="utf-8") as f:
+        json.dump(_diag_reqs, f, ensure_ascii=False, indent=1)
+    with open(os.path.join(data_dir, "debug_console.json"), "w", encoding="utf-8") as f:
+        json.dump(_diag_console, f, ensure_ascii=False, indent=1)
+    with open(os.path.join(data_dir, "debug_html.txt"), "w", encoding="utf-8") as f:
+        f.write(_diag_html)
     with open(os.path.join(data_dir, "payload.json"), "w", encoding="utf-8") as f:
         json.dump(captured_payloads, f, ensure_ascii=False, indent=1)
     ts = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M")
